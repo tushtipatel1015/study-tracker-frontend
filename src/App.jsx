@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Analytics } from '@vercel/analytics/react'
+//import { Analytics } from '@vercel/analytics/react'
 
 const STORAGE_KEY = "study-tracker-items-v1";
 
@@ -83,7 +83,7 @@ export default function App() {
           ))}
         </ul>
       </div>
-      <Analytics />
+
     </div>
   );
 }
