@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Analytics } from "@vercel/analytics/next"
 
 const STORAGE_KEY = "study-tracker-items-v1";
 
