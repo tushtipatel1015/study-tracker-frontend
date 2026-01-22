@@ -12,6 +12,8 @@ export default function App() {
   });
   const [text, setText] = useState("");
   const [filter, setFilter] = useState("all"); // all | active | done
+  const [editingId, setEditingId] = useState(null);
+  const [editingText, setEditingText] = useState("");
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
@@ -39,6 +41,37 @@ export default function App() {
     setItems((prev) => prev.filter((it) => it.id !== id));
   }
 
+  function editTask(id, newTask) {
+    const trimmed = newTask.trim();
+    
+    if(!trimmed){
+      return;
+    }
+
+    setItems((prev) => prev.map((it) => (it.id === id ? {...it, title: trimmed } : it)));
+  }
+
+  function moveTask(id, direction) { 
+    // -1 move up
+    // +1 move down
+
+    setItems((prev) => { 
+      const idx = prev.findIndex((t) => t.id === id);
+      
+      if (idx === -1) return prev;
+
+      const newIdx = idx + direction;
+      if (newIdx < 0 || newIdx >= prev.length) return prev;
+
+      const copy = [...prev];
+      const temp = copy[idx];
+      copy[idx] = copy[newIdx];
+      copy[newIdx] = temp;
+      return copy;
+    });
+  }
+
+
   const visibleItems = useMemo(() => {
     if (filter === "active") return items.filter((i) => !i.done);
     if (filter === "done") return items.filter((i) => i.done);
@@ -57,7 +90,7 @@ export default function App() {
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="e.g., Watch Messer Video 2"
+            placeholder="e.g., Do math HW"
             style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: "1px solid #ddd" }}
           />
           <button type="submit" style={{ padding: "10px 14px", borderRadius: 10, border: "1px solid #111", background: "#344b76", color: "white" }}>
@@ -73,13 +106,97 @@ export default function App() {
 
         <ul style={{ listStyle: "none", padding: 0, marginTop: 14 }}>
           {visibleItems.map((item) => (
-            <li key={item.id} style={{ display: "flex", justifyContent: "space-between", padding: 10, border: "1px solid #eee", borderRadius: 12, marginBottom: 10 }}>
-              <label style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <input type="checkbox" checked={item.done} onChange={() => toggleDone(item.id)} />
-                <span style={{ textDecoration: item.done ? "line-through" : "none" }}>{item.title}</span>
-              </label>
-              <button onClick={() => removeItem(item.id)}>✕</button>
-            </li>
+            <li
+              key={item.id}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 12,
+                padding: 10,
+                border: "1px solid #eee",
+                borderRadius: 12,
+                marginBottom: 10,
+              }}
+            >
+              {/* LEFT SIDE: checkbox + title OR edit input */}
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1 }}>
+                <input
+                  type="checkbox"
+                  checked={item.done}
+                  onChange={() => toggleDone(item.id)}
+                />
+            
+                {editingId === item.id ? (
+                  <input
+                    value={editingText}
+                    onChange={(e) => setEditingText(e.target.value)}
+                    style={{
+                      flex: 1,
+                      padding: "8px 10px",
+                      borderRadius: 10,
+                      border: "1px solid #ddd",
+                    }}
+                    autoFocus
+                  />
+                ) : (
+                  <span
+                    style={{
+                      flex: 1,
+                      textDecoration: item.done ? "line-through" : "none",
+                    }}
+                  >
+                    {item.title}
+                  </span>
+                )}
+              </div>
+            
+              {/* RIGHT SIDE: controls */}
+              <div style={{ display: "flex", gap: 8 }}>
+              {/* reorder */}
+              <button type="button" onClick={() => moveTask(item.id, -1)}>↑</button>
+              <button type="button" onClick={() => moveTask(item.id, 1)}>↓</button>
+                
+              {/* edit */}
+              {editingId === item.id ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      editTask(item.id, editingText);
+                      setEditingId(null);
+                      setEditingText("");
+                    }}
+                  >
+                    Save
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingId(null);
+                      setEditingText("");
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingId(item.id);
+                    setEditingText(item.title);
+                  }}
+                >
+                  Edit
+                </button>
+              )}
+
+              {/* delete */}
+              <button type="button" onClick={() => removeItem(item.id)}>✕</button>
+            </div>
+          </li>
           ))}
         </ul>
         <Analytics />
