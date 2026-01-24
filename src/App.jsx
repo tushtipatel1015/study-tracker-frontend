@@ -11,18 +11,23 @@ export default function App() {
   const API = `${import.meta.env.VITE_API_BASE}/api/tasks`;
 
   const [items, setItems] = useState([]);
-
+  const [loading, setLoading] = useState(true);
   const [text, setText] = useState("");
   const [filter, setFilter] = useState("all"); // all | active | done
   const [editingId, setEditingId] = useState(null);
   const [editingText, setEditingText] = useState("");
 
-
   useEffect(() => {
     async function load() {
-      const res = await fetch(API);
-      const data = await res.json();
-      setItems(data);
+      try {
+        const res = await fetch(API);
+        const data = await res.json();
+        setItems(data);
+      } catch (e) {
+        console.error("Backend waking up...");
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, []);
@@ -123,101 +128,103 @@ export default function App() {
           <button onClick={() => setFilter("done")}>Done</button>
         </div>
 
-        <ul style={{ listStyle: "none", padding: 0, marginTop: 14 }}>
-          {visibleItems.map((item) => (
-            <li
-              key={item.id}
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: 12,
-                padding: 10,
-                border: "1px solid #eee",
-                borderRadius: 12,
-                marginBottom: 10,
-              }}
-            >
-              {/* LEFT SIDE: checkbox + title OR edit input */}
-              <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1 }}>
-                <input
-                  type="checkbox"
-                  checked={item.done}
-                  onChange={() => toggleDone(item.id)}
-                />
-            
-                {editingId === item.id ? (
+        {loading ? (
+          <p style={{ marginTop: 16, opacity: 0.8 }}>
+            Waking up server… (Render free tier can take ~10–30 seconds after inactivity)
+          </p>
+        ) : (
+          <ul style={{ listStyle: "none", padding: 0, marginTop: 14 }}>
+            {visibleItems.map((item) => (
+              <li
+                key={item.id}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: 10,
+                  border: "1px solid #eee",
+                  borderRadius: 12,
+                  marginBottom: 10,
+                }}
+              >
+                {/* LEFT SIDE: checkbox + title OR edit input */}
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1 }}>
                   <input
-                    value={editingText}
-                    onChange={(e) => setEditingText(e.target.value)}
-                    style={{
-                      flex: 1,
-                      padding: "8px 10px",
-                      borderRadius: 10,
-                      border: "1px solid #ddd",
-                    }}
-                    autoFocus
+                    type="checkbox"
+                    checked={item.done}
+                    onChange={() => toggleDone(item.id)}
                   />
-                ) : (
-                  <span
-                    style={{
-                      flex: 1,
-                      textDecoration: item.done ? "line-through" : "none",
-                    }}
-                  >
-                    {item.title}
-                  </span>
-                )}
-              </div>
-            
-              {/* RIGHT SIDE: controls */}
-              <div style={{ display: "flex", gap: 8 }}>
-              {/* reorder */}
-              <button type="button" onClick={() => moveTask(item.id, -1)}>↑</button>
-              <button type="button" onClick={() => moveTask(item.id, 1)}>↓</button>
-                
-              {/* edit */}
-              {editingId === item.id ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      editTask(item.id, editingText);
-                      setEditingId(null);
-                      setEditingText("");
-                    }}
-                  >
-                    Save
-                  </button>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditingId(null);
-                      setEditingText("");
-                    }}
-                  >
-                    Cancel
-                  </button>
-                </>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditingId(item.id);
-                    setEditingText(item.title);
-                  }}
-                >
-                  Edit
-                </button>
-              )}
+                  {editingId === item.id ? (
+                    <input
+                      value={editingText}
+                      onChange={(e) => setEditingText(e.target.value)}
+                      style={{
+                        flex: 1,
+                        padding: "8px 10px",
+                        borderRadius: 10,
+                        border: "1px solid #ddd",
+                      }}
+                      autoFocus
+                    />
+                  ) : (
+                    <span
+                      style={{
+                        flex: 1,
+                        textDecoration: item.done ? "line-through" : "none",
+                      }}
+                    >
+                      {item.title}
+                    </span>
+                  )}
+                </div>
 
-              {/* delete */}
-              <button type="button" onClick={() => removeItem(item.id)}>✕</button>
-            </div>
-          </li>
-          ))}
-        </ul>
+                {/* RIGHT SIDE: controls */}
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button type="button" onClick={() => moveTask(item.id, -1)}>↑</button>
+                  <button type="button" onClick={() => moveTask(item.id, 1)}>↓</button>
+
+                  {editingId === item.id ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          editTask(item.id, editingText);
+                          setEditingId(null);
+                          setEditingText("");
+                        }}
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingId(null);
+                          setEditingText("");
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingId(item.id);
+                        setEditingText(item.title);
+                      }}
+                    >
+                      Edit
+                    </button>
+                  )}
+
+                  <button type="button" onClick={() => removeItem(item.id)}>✕</button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
       <Analytics />
     </div>
