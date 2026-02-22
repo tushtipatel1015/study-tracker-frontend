@@ -16,8 +16,11 @@ export default function App() {
     })();
   
   const API_BASE = import.meta.env.VITE_API_BASE;
-  const API = `${API_BASE}/api/tasks?userId=${encodeURIComponent(userId)}`;
-  
+  const TASKS_BASE = `${API_BASE}/api/tasks`;
+
+  const tasksListUrl = `${TASKS_BASE}?userId=${encodeURIComponent(userId)}`; // GET list, POST create
+  const taskUrl = (id) => `${TASKS_BASE}/${id}`;                            // PUT/PATCH/DELETE single task
+  const reorderUrl = `${TASKS_BASE}/reorder?userId=${encodeURIComponent(userId)}`; // if your backend needs userId
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -52,7 +55,7 @@ export default function App() {
   }, []);
 
   async function loadTasks() {
-    const res = await fetch(`${API}?userId=${userId}`);
+    const res = await fetch(tasksListUrl);
     if (!res.ok) throw new Error(`GET failed: ${res.status}`);
     const data = await res.json();
     setItems(data);
@@ -63,7 +66,7 @@ export default function App() {
     const trimmed = text.trim();
     if (!trimmed) return;
 
-    const res = await fetch(API, {
+    const res = await fetch(tasksListUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: trimmed, done: false, userId }),
@@ -75,14 +78,14 @@ export default function App() {
   }
 
   async function toggleDone(id) {
-    const res = await fetch(`${API}/${id}`, { method: "PATCH" });
+    const res = await fetch(taskUrl(id), { method: "PATCH" });
     const updated = await res.json();
   
     setItems((prev) => prev.map((it) => (it.id === id ? updated : it)));
   }
 
   async function removeItem(id) {
-    await fetch(`${API}/${id}`, { method: "DELETE" });
+    await fetch(taskUrl(id), { method: "DELETE" });
     setItems((prev) => prev.filter((it) => it.id !== id));
   }
 
@@ -90,8 +93,8 @@ export default function App() {
     const trimmed = newTask.trim();
     if (!trimmed) return;
   
-    const res = await fetch(`${API}/${id}`, {
-      method: "PUT",
+    const res = await fetch(taskUrl(id), {
+      method: "PUT", 
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: trimmed }),
     });
@@ -111,7 +114,7 @@ export default function App() {
       [copy[idx], copy[newIdx]] = [copy[newIdx], copy[idx]];
   
       // Persist new order (fire-and-forget)
-      fetch(`${API}/reorder`, {
+      fetch(reorderUrl, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orderedIds: copy.map((t) => t.id) }),
