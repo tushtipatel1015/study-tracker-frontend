@@ -135,9 +135,6 @@ export default function App() {
     <div style={{ minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center", padding: 24}}>
       <div style={{ width: "min(720px, 100%)", border: "1px solid #eee", borderRadius: 16, padding: 20 }}>
         <h1 style={{ margin: 0 }}>Study Session Tracker</h1>
-        <p style={{ opacity: 0.6, fontSize: 12 }}>
-          build: 2026-02-22-1
-        </p>
         <p style={{ marginTop: 6, color: "#ffffff" }}>
           Add what you’re studying, check it off, and it’ll save automatically.
         </p>
