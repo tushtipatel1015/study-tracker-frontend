@@ -8,7 +8,15 @@ const STORAGE_KEY = "study-tracker-items-v1";
 export default function App() {
 
   const API_BASE = import.meta.env.VITE_API_BASE;
-  const API = `${import.meta.env.VITE_API_BASE}/api/tasks`;
+  const API = `${API_BASE}/api/tasks?userId=${encodeURIComponent(userId)}`;
+
+  const userId =
+  localStorage.getItem("studytracker-user") ||
+  (() => {
+    const id = crypto.randomUUID();
+    localStorage.setItem("studytracker-user", id);
+    return id;
+  })();
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,7 +51,7 @@ export default function App() {
   }, []);
 
   async function loadTasks() {
-    const res = await fetch(API);
+    const res = await fetch(`${API}?userId=${userId}`);
     if (!res.ok) throw new Error(`GET failed: ${res.status}`);
     const data = await res.json();
     setItems(data);
@@ -57,7 +65,7 @@ export default function App() {
     const res = await fetch(API, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: trimmed, done: false }),
+      body: JSON.stringify({ title: trimmed, done: false, userId }),
     });
 
     const created = await res.json();
