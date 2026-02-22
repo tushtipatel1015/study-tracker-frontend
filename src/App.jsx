@@ -7,16 +7,17 @@ const STORAGE_KEY = "study-tracker-items-v1";
 
 export default function App() {
 
+  const userId =
+    localStorage.getItem("studytracker-user") ||
+    (() => {
+      const id = crypto.randomUUID();
+      localStorage.setItem("studytracker-user", id);
+      return id;
+    })();
+  
   const API_BASE = import.meta.env.VITE_API_BASE;
   const API = `${API_BASE}/api/tasks?userId=${encodeURIComponent(userId)}`;
-
-  const userId =
-  localStorage.getItem("studytracker-user") ||
-  (() => {
-    const id = crypto.randomUUID();
-    localStorage.setItem("studytracker-user", id);
-    return id;
-  })();
+  
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
