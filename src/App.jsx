@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Analytics } from "@vercel/analytics/react";
+<p style={{opacity:0.6, fontSize:12}}>build: 2026-02-22-1</p>
 
 const STORAGE_KEY = "study-tracker-items-v1";
 
